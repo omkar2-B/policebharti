@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AntiGravity - Police Bharti Prep</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0a1128">
+    <link rel="icon" href="icon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="icon.svg">
+</head>
+<body>
+    <!-- BACKGROUND PARTICLES -->
+    <canvas id="bgCanvas" style="position: absolute; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none;"></canvas>
+
+    <div class="mobile-app">
+        
+        <!-- SYSTEM LOCKDOWN OVERLAY (Out of Control) -->
+        <div id="systemLockdown" class="lockdown-overlay" style="display: none;">
+            <div class="lockdown-content">
+                <h1 class="text-danger"><i class="fa-solid fa-triangle-exclamation"></i> OUT OF CONTROL DETECTED</h1>
+                <p class="text-muted">System locked for emotional stabilization. Follow the steps to unlock.</p>
+                
+                <div id="groundingSteps" class="mt-4">
+                    <div id="step-5" class="ground-step active"><h3>5</h3><p>Identify 5 things you SEE around you right now.</p></div>
+                    <div id="step-4" class="ground-step"><h3>4</h3><p>Identify 4 things you can TOUCH (feel the texture).</p></div>
+                    <div id="step-3" class="ground-step"><h3>3</h3><p>Identify 3 things you HEAR (listen closely).</p></div>
+                    <div id="step-2" class="ground-step"><h3>2</h3><p>Identify 2 things you can SMELL.</p></div>
+                    <div id="step-1" class="ground-step"><h3>1</h3><p>Identify 1 thing you can TASTE (or your favorite taste).</p></div>
+                    
+                    <button class="cyber-btn primary mt-4" id="groundingNextBtn" onclick="nextGroundingStep()">NEXT STEP</button>
+                </div>
+
+                <div id="parentAnchor" class="glass-panel mt-4" style="display: none; border-color: #fff; background: rgba(255,255,255,0.1);">
+                    <h2 style="color: #fff; font-family: 'Rajdhani', sans-serif;">विचार करा...</h2>
+                    <p style="font-style: italic; margin: 15px 0;">"तुमच्या आई-वडिलांनी तुमच्यासाठी पाहिलेले स्वप्न तुमच्या या रागानंतर संपणार आहे का?"</p>
+                    <p style="font-size: 0.8rem; color: #aaa;">त्यांच्या कष्टाची आठवण करा. शांत व्हा. वर्दी तुमचीच आहे.</p>
+                    <button class="cyber-btn success mt-4" onclick="exitLockdown()">I AM CALM NOW / UNLOCK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLOATING MINI TIMER -->
+        <div id="miniTimer" class="floating-timer" onclick="switchView('ground')">
+            <i class="fa-solid fa-stopwatch-20"></i>
+            <span id="miniTimerText">00:00:00</span>
+        </div>
+        
+        <!-- SPLASH SCREEN -->
+        <div id="splashScreen" class="splash-screen">
+            <div class="splash-logo">
+                <i class="fa-solid fa-shield-halved text-neon-blue"></i>
+                <h1>ANTI<span class="text-neon-orange">GRAVITY</span></h1>
+                <p class="marathi-tagline">वर्दी मिळवणारच! 👮‍♂️</p>
+                <div class="loading-bar-container mt-4">
+                    <div class="loading-bar"></div>
+                </div>
+            </div>
+        </div>
+
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-text">ANTI</span><span class="logo-accent">GRAVITY</span>
+            </div>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div class="profile-pic" onclick="switchView('analytics')">
+                    <i class="fa-solid fa-chart-simple"></i>
+                </div>
+                <div class="profile-pic" onclick="hapticFeedback()">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-content">
+            <div id="futureSelfMessage" class="glass-panel future-self-panel">
+                <p class="panel-tag"><i class="fa-solid fa-eye"></i> Future Self Warning:</p>
+                <h4 id="futureQuote">"Your future self is watching your decisions today. Choose discipline."</h4>
+            </div>
+
+            <!-- DASHBOARD -->
+            <div id="view-dashboard" class="view active">
+                <!-- MISSION OF THE DAY -->
+                <div class="mission-of-the-day glass-panel" id="missionContainer">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div class="mission-icon"><i class="fa-solid fa-bullseye"></i></div>
+                        <div>
+                            <p style="font-size: 0.6rem; color: var(--neon-blue); letter-spacing: 1px; text-transform: uppercase; font-weight: 700;">Mission of the Day</p>
+                            <h4 id="dailyMissionText" style="font-size: 0.85rem; margin-top: 2px;">Loading mission...</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="greeting" style="text-align: center; margin-bottom: 20px;">
+                    <h2>JAI MAHARASHTRA!</h2>
+                    <p id="typewriterQuote" style="color: var(--neon-orange); font-style: italic; min-height: 20px; font-weight: 600;"></p>
+                </div>
+
+                <!-- NEW: MOOD CHECK-IN -->
+                <div class="glass-panel mt-4 border-blue" id="moodCheckinContainer">
+                    <h3 style="font-size: 0.8rem;"><i class="fa-solid fa-face-smile"></i> HOW ARE YOU, OFFICER?</h3>
+                    <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                        <button class="mood-btn" onclick="setMood('rage')">😠 Rage</button>
+                        <button class="mood-btn" onclick="setMood('sad')">😔 Low</button>
+                        <button class="mood-btn" onclick="setMood('focus')">🎯 Focus</button>
+                        <button class="mood-btn" onclick="setMood('tired')">😴 Tired</button>
+                    </div>
+                    <p id="moodAdvice" class="mt-4" style="font-size: 0.75rem; color: var(--neon-blue); font-style: italic; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px; display: none;"></p>
+                </div>
+
+                <!-- MONK MODE CHALLENGE -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                    <div class="rank-container glass-panel" style="flex: 2; margin-bottom: 0; position: relative;">
+                        <div class="rank-badge" id="rankBadge">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <div class="rank-info">
+                            <p style="font-size:0.6rem; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase;">Rank</p>
+                            <h3 id="rankTitle" style="font-family:'Orbitron', sans-serif; font-size: 1rem; color: #fff;">RECRUIT</h3>
+                        </div>
+                    </div>
+                    <div class="glass-panel" style="flex: 1; margin-bottom: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-left: 2px solid var(--neon-orange); background: rgba(255,85,0,0.05);">
+                        <i class="fa-solid fa-om" style="color: var(--neon-orange); font-size: 1.5rem; margin-bottom: 5px;"></i>
+                        <span id="streakCount" style="font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: bold;">0</span>
+                        <span style="font-size: 0.55rem; color: var(--text-muted); text-align: center;">MONK MODE<br>DAYS</span>
+                    </div>
+                </div>
+
+                <!-- NEW: WARRIOR MINDSET OATH (Daily Treatment) -->
+                <div class="glass-panel mt-4 border-orange" id="oathContainer" style="background: rgba(255,85,0,0.05);">
+                    <h3 style="color: var(--neon-orange); text-align: center;"><i class="fa-solid fa-hand-fist"></i> SHAPATH (THE OATH)</h3>
+                    <p id="oathText" style="font-size: 0.85rem; font-style: italic; text-align: center; margin: 15px 0;">"आज मी माझ्या रागाचा वापर माझ्या स्वप्नांसाठी करेन, कोणावर ओरडण्यासाठी नाही. वर्दी माझी आहे, आणि ती मी मिळवणारच."</p>
+                    <button class="cyber-btn danger" style="width: 100%;" onclick="signOath()">I SIGN THE OATH</button>
+                </div>
+
+                <!-- NEW: UNIFORM VISUALIZATION -->
+                <div class="glass-panel mt-4 border-blue" style="text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle, rgba(0,240,255,0.1) 0%, transparent 70%); pointer-events: none;"></div>
+                    <h3 style="font-size: 0.8rem; letter-spacing: 2px;">VISION OF VICTORY</h3>
+                    <i class="fa-solid fa-user-tie" style="font-size: 4rem; color: #fff; margin: 15px 0; opacity: 0.8;"></i>
+                    <p style="font-size: 0.7rem; color: var(--text-muted);">Visualize YOUR name on this uniform.</p>
+                    <button class="cyber-btn primary mt-4" onclick="switchView('drill')">GO TO DRILL</button>
+                </div>
+
+                <!-- NEW: COLD DISCIPLINE (Mental Toughness) -->
+                <div class="glass-panel mt-4">
+                    <h3><i class="fa-solid fa-snowflake"></i> MENTAL TOUGHNESS</h3>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+                        <span style="font-size: 0.8rem;">Cold Shower Taken?</span>
+                        <input type="checkbox" id="coldShowerCheck" onchange="toggleColdDiscipline()">
+                    </div>
+                </div>
+
+                <!-- NEW: PARENTAL SACRIFICE RITUAL -->
+                <div class="glass-panel mt-4 border-blue" style="background: rgba(0,240,255,0.02);">
+                    <h3 style="font-size: 0.8rem;"><i class="fa-solid fa-heart-pulse"></i> PARENTAL RITUAL</h3>
+                    <p style="font-size: 0.7rem; margin-top: 5px;">Whenever rage hits, write one thing you will buy for your parents after your first salary.</p>
+                    <input type="text" id="parentGift" class="cyber-input" placeholder="उदा. आईला सोन्याची बांगडी...">
+                    <button class="cyber-btn primary mt-4" style="width: 100%;" onclick="saveParentalRitual()">RECORD PLEDGE</button>
+                </div>
+                <!-- LIFE BALANCE DASHBOARD -->
+                <div class="glass-panel mt-4 border-blue" id="lifeBalanceContainer">
+                    <h3><i class="fa-solid fa-scale-balanced"></i> LIFE BALANCE DASHBOARD</h3>
+                    <div class="balance-sliders mt-4">
+                        <div class="slider-row">
+                            <label><i class="fa-solid fa-briefcase"></i> CAREER <span id="valCareer">0%</span></label>
+                            <div class="glow-bar"><div class="glow-progress blue" id="barCareer" style="width: 0%;"></div></div>
+                        </div>
+                        <div class="slider-row">
+                            <label><i class="fa-solid fa-people-roof"></i> FAMILY <span id="valFamily">0%</span></label>
+                            <div class="glow-bar"><div class="glow-progress blue" id="barFamily" style="width: 0%;"></div></div>
+                        </div>
+                        <div class="slider-row">
+                            <label><i class="fa-solid fa-heart"></i> RELATIONSHIP <span id="valLove">0%</span></label>
+                            <div class="glow-bar"><div class="glow-progress orange" id="barLove" style="width: 0%;"></div></div>
+                        </div>
+                        <div class="slider-row">
+                            <label><i class="fa-solid fa-peace"></i> MENTAL PEACE <span id="valPeace">100%</span></label>
+                            <div class="glow-bar"><div class="glow-progress blue" id="barPeace" style="width: 100%;"></div></div>
+                        </div>
+                        <div class="slider-row">
+                            <label><i class="fa-solid fa-heart-pulse"></i> HEALTH <span id="valHealth">0%</span></label>
+                            <div class="glow-bar"><div class="glow-progress orange" id="barHealth" style="width: 0%;"></div></div>
+                        </div>
+                    </div>
+                    
+                    <div id="balanceAdvice" class="priority-message text-neon-blue" style="font-size: 0.75rem; margin-top: 15px; text-align: center; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px;">
+                        Complete your logs to generate assessment...
+                    </div>
+                </div>
+
+                <div class="stats-overview" style="margin-bottom: 20px;">
+                    <div class="stat-card glass-panel cyber-border" onclick="switchView('log')" style="cursor:pointer; margin-bottom: 0;">
+                        <i class="fa-solid fa-fire text-neon-orange"></i>
+                        <div class="stat-details">
+                            <span class="stat-value" id="dashboardScore">0%</span>
+                            <span class="stat-label">Today's Discipline</span>
+                        </div>
+                        <div class="glow-bar"><div class="glow-progress orange" id="dashboardScoreBar" style="width: 0%;"></div></div>
+                    </div>
+                    <div class="stat-card glass-panel cyber-border" onclick="switchView('analytics')" style="cursor:pointer; margin-bottom: 0;">
+                        <i class="fa-solid fa-chart-line text-neon-blue"></i>
+                        <div class="stat-details">
+                            <span class="stat-value" id="consistencyScoreDash">0%</span>
+                            <span class="stat-label">7-Day Focus</span>
+                        </div>
+                        <div class="glow-bar"><div class="glow-progress blue" id="consistencyScoreBar" style="width: 0%;"></div></div>
+                    </div>
+                </div>
+
+                <!-- ACCOUNTABILITY MATRIX -->
+                <div class="accountability-grid" style="margin-bottom: 20px;">
+                    <div class="power-gauge">
+                        <span class="gauge-value" id="careerPowerVal">0%</span>
+                        <span class="gauge-label">CAREER POWER</span>
+                        <p id="priorityMessage" class="priority-message" style="font-size: 0.6rem; margin-top: 5px;">CALCULATING...</p>
+                    </div>
+                    <div class="harmony-box">
+                        <div id="harmonyStatus" style="font-size: 0.65rem; margin-bottom: 10px;">STATUS: <span class="harmony-status-text waiting">WAITING...</span></div>
+                        <div class="sync-breathe-container" onmousedown="startPledgeHold()" onmouseup="endPledgeHold()" onmouseleave="endPledgeHold()" ontouchstart="startPledgeHold()" ontouchend="endPledgeHold()">
+                            <button class="sync-breathe-btn" id="pledgeBtn"><span id="pledgeText">HOLD TO PLEDGE</span></button>
+                            <div class="pledge-progress" id="pledgeProgress"></div>
+                        </div>
+                        <input type="checkbox" id="peacePledge" style="display:none;">
+                    </div>
+                </div>
+
+                <!-- NEW: COMMANDANT'S TIMETABLE -->
+                <div class="glass-panel mt-4 border-blue">
+                    <h3><i class="fa-solid fa-clock-rotate-left"></i> COMMANDANT'S ROUTINE</h3>
+                    <div class="routine-list">
+                        <div class="routine-item"><span>05:00 AM</span><p>Wake Up & Ground Practice</p></div>
+                        <div class="routine-item"><span>08:30 AM</span><p>Nutrition & First Study Session</p></div>
+                        <div class="routine-item"><span>01:00 PM</span><p>Lunch & Quick Revision</p></div>
+                        <div class="routine-item"><span>04:00 PM</span><p>Second Study Session (Maths/GK)</p></div>
+                        <div class="routine-item"><span>07:00 PM</span><p>Evening Walk & Family Time</p></div>
+                        <div class="routine-item"><span>09:30 PM</span><p>Mock Test & Day Audit</p></div>
+                    </div>
+                </div>
+
+                <!-- NEW: ACHIEVEMENT BADGES -->
+                <div class="glass-panel mt-4">
+                    <h3><i class="fa-solid fa-medal"></i> YOUR ACHIEVEMENTS</h3>
+                    <div class="badge-gallery" id="badgeGallery">
+                        <div class="badge-item locked" title="7 Days Streak"><i class="fa-solid fa-fire"></i><p>7-DAY</p></div>
+                        <div class="badge-item locked" title="100% Discipline"><i class="fa-solid fa-bolt"></i><p>MAX-D</p></div>
+                        <div class="badge-item locked" title="IPS Rank"><i class="fa-solid fa-crown"></i><p>IPS</p></div>
+                        <div class="badge-item locked" title="Mental Giant"><i class="fa-solid fa-brain"></i><p>ZEN</p></div>
+                    </div>
+                </div>
+
+                <!-- ELIGIBILITY CHECKER -->
+                <div class="body-stats-container glass-panel cyber-border">
+                    <h3><i class="fa-solid fa-id-card"></i> ELIGIBILITY CHECK (PST)</h3>
+                    <div class="stats-inputs">
+                        <div>
+                            <label>Height (cm)</label>
+                            <input type="number" id="heightInput" class="cyber-input" placeholder="Min 165" onchange="updateEligibility()">
+                        </div>
+                        <div>
+                            <label>Chest (cm)</label>
+                            <input type="number" id="chestInput" class="cyber-input" placeholder="Min 79" onchange="updateEligibility()">
+                        </div>
+                    </div>
+                    <div class="bmi-display">
+                        <span>PST Status: <span id="pstStatus" class="bmi-status">WAITING...</span></span>
+                        <span>BMI: <span id="bmiValue">--</span></span>
+                    </div>
+                </div>
+
+                <section class="modules-grid mt-4">
+                    <div class="module-card glass-panel holographic-hover" onclick="switchView('bonds')">
+                        <i class="fa-solid fa-heart-pulse text-neon-orange"></i>
+                        <h3>Bonds & Audit</h3>
+                    </div>
+                    <div class="module-card glass-panel holographic-hover" onclick="switchView('study')">
+                        <i class="fa-solid fa-lock text-neon-blue"></i>
+                        <h3>Career Lock</h3>
+                    </div>
+                    <div class="module-card glass-panel holographic-hover" onclick="switchView('ground')">
+                        <i class="fa-solid fa-person-running text-neon-orange"></i>
+                        <h3>Ground</h3>
+                    </div>
+                    <div class="module-card glass-panel holographic-hover" onclick="switchView('log')">
+                        <i class="fa-solid fa-calendar-check text-neon-blue"></i>
+                        <h3>Daily Log</h3>
+                    </div>
+                </section>
+                
+                <!-- EMOTIONAL DECISION SYSTEM (CALM DOWN) -->
+                <div class="emergency-container mt-4">
+                    <button class="calm-down-btn" onclick="checkEmotionalState()">
+                        <i class="fa-solid fa-triangle-exclamation"></i> EMOTIONAL DECISION SYSTEM
+                    </button>
+                    <button class="cyber-btn danger mt-4" style="width: 100%; border: 2px solid #ff0000; font-weight: 900;" onclick="triggerLockdown()">
+                        <i class="fa-solid fa-skull"></i> OUT OF CONTROL? CLICK HERE
+                    </button>
+                </div>
+                
+                <!-- SETTINGS / RESET -->
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="action-btn" style="border-color: rgba(255,255,255,0.2); color: var(--text-muted); font-size: 0.7rem;" onclick="clearAllData()">
+                        <i class="fa-solid fa-triangle-exclamation"></i> RESET APP DATA
+                    </button>
+                </div>
+            </div>
+
+            <!-- BONDS & LIFE AUDIT VIEW -->
+            <div id="view-bonds" class="view">
+                <h2><i class="fa-solid fa-heart-pulse"></i> BONDS & LIFE AUDIT</h2>
+                <p style="font-size:0.8rem; color:var(--text-muted); margin-bottom:15px;">Criteria-based judgment. No fake sliders.</p>
+                
+                <!-- FAMILY BOND SYSTEM -->
+                <div class="log-section glass-panel">
+                    <h3><i class="fa-solid fa-house-user text-neon-blue"></i> Family Criteria</h3>
+                    <div class="checklist" id="familyBonds">
+                        <label class="check-item"><input type="checkbox" onchange="toggleBond('family', 'call')"> <span class="checkmark"></span> Called or Talked to Parents Respectfully</label>
+                        <label class="check-item"><input type="checkbox" onchange="toggleBond('family', 'time')"> <span class="checkmark"></span> 15 mins Quality Time (No Mobile)</label>
+                        <label class="check-item"><input type="checkbox" onchange="toggleBond('family', 'anger')"> <span class="checkmark"></span> Did NOT shout or argue with family today</label>
+                    </div>
+                </div>
+
+                <!-- RELATIONSHIP REALITY CHECKER -->
+                <div class="log-section glass-panel" style="border-left: 3px solid #ff3366;">
+                    <h3><i class="fa-solid fa-heart text-neon-orange"></i> Relationship Criteria</h3>
+                    <div class="checklist" id="loveBonds">
+                        <label class="check-item"><input type="checkbox" onchange="toggleBond('love', 'listen')"> <span class="checkmark"></span> Listened without Ego</label>
+                        <label class="check-item"><input type="checkbox" onchange="toggleBond('love', 'calm')"> <span class="checkmark"></span> Communicated Calmly (Zero toxic fights)</label>
+                        <label class="check-item"><input type="checkbox" onchange="toggleBond('love', 'support')"> <span class="checkmark"></span> Supported their goals / Showed Appreciation</label>
+                    </div>
+                </div>
+                <!-- WEEKLY LIFE AUDIT -->
+                <div class="log-section glass-panel">
+                    <h3><i class="fa-solid fa-magnifying-glass-chart text-neon-blue"></i> Weekly Life Audit</h3>
+                    <button class="cyber-btn primary" style="width: 100%;" onclick="generateAudit()">GENERATE SUNDAY REPORT</button>
+                    <div id="auditReport" style="font-size:0.8rem; margin-top:15px; line-height:1.5; color:var(--text-muted); display:none;">
+                        <!-- Audit populated here -->
+                    </div>
+                </div>
+            </div>
+            <!-- DAILY LOG & DIET -->
+            <div id="view-log" class="view">
+                <h2><i class="fa-solid fa-calendar-check"></i> DIET & COMPLETION LOG</h2>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Track your nutrition and daily overall score.</p>
+                
+                <div class="date-selector glass-panel cyber-border">
+                    <button class="icon-btn" onclick="changeDate(-1)"><i class="fa-solid fa-chevron-left"></i></button>
+                    <span id="currentDateDisplay" class="date-text">Today</span>
+                    <button class="icon-btn" onclick="changeDate(1)" id="nextDateBtn" disabled><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+                
+                <div class="log-summary text-center" style="margin-bottom: 15px;">
+                    <h3 style="color: var(--neon-blue); font-size: 2.5rem; font-family: 'Orbitron', sans-serif;" id="dailyScore">0%</h3>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 2px;">Daily Completion</p>
+                </div>
+
+                <div class="log-entries">
+                    
+                    <div class="log-section glass-panel">
+                        <h3><i class="fa-solid fa-utensils text-neon-orange"></i> Diet Followed</h3>
+                        <div class="checklist" id="checklist-diet">
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('diet', 'Pre-workout')"> <span class="checkmark"></span> Pre-workout Meal</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('diet', 'High Protein Breakfast')"> <span class="checkmark"></span> High Protein Breakfast</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('diet', 'Clean Lunch & Dinner')"> <span class="checkmark"></span> Clean Lunch & Dinner</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STUDY DESK -->
+            <div id="view-study" class="view">
+                <h2><i class="fa-solid fa-book-open"></i> CAREER DESK</h2>
+                
+                <!-- DEEP WORK LOCK -->
+                <div class="glass-panel cyber-border" id="deepWorkContainer">
+                    <h3 style="color: var(--neon-blue); font-size: 1rem;"><i class="fa-solid fa-lock"></i> DEEP WORK LOCK</h3>
+                    <p style="font-size: 0.7rem; color: var(--text-muted); margin-bottom: 15px;">Proof of Study: If you leave this app, the timer resets. Stay for 25 mins to earn Focus Points.</p>
+                    <div id="deepWorkDisplay" style="font-family: 'Orbitron', sans-serif; font-size: 2.5rem; text-align: center; margin: 15px 0; color: #fff;">25:00</div>
+                    <button id="deepWorkBtn" class="cyber-btn primary" style="width: 100%;" onclick="toggleDeepWork()">START FOCUS SESSION</button>
+                    <div id="deepWorkWarning" style="color: #ff3366; font-size: 0.65rem; margin-top: 10px; display: none; text-align: center;">WARNING: DISTRACTION DETECTED! TIMER RESET.</div>
+                </div>
+
+                <div class="list-container mt-4">
+                    <div class="log-section glass-panel">
+                        <h3><i class="fa-solid fa-book-open text-neon-blue"></i> Daily Study Target</h3>
+                        <div class="checklist" id="checklist-study">
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('study', 'Maths Mock')"> <span class="checkmark"></span> Maths Mock Test</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('study', 'Marathi Grammar')"> <span class="checkmark"></span> Marathi Grammar</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('study', 'GK & Current Affairs')"> <span class="checkmark"></span> GK & Current Affairs</label>
+                        </div>
+                    </div>
+
+                    <div class="glass-panel cyber-border mt-4 border-blue">
+                        <h3><i class="fa-solid fa-file-signature text-neon-blue"></i> WRITTEN EXAM PATTERN (100 MARKS)</h3>
+                        <div class="marks-grid">
+                            <div class="mark-card blue">
+                                <h4>Marathi</h4><p class="score">25 Marks</p>
+                            </div>
+                            <div class="mark-card blue">
+                                <h4>Maths</h4><p class="score">25 Marks</p>
+                            </div>
+                            <div class="mark-card blue">
+                                <h4>Reasoning</h4><p class="score">25 Marks</p>
+                            </div>
+                            <div class="mark-card blue">
+                                <h4>GK & CA</h4><p class="score">25 Marks</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 20px; color: var(--neon-blue);"><i class="fa-solid fa-list-ul"></i> MH POLICE DETAILED SYLLABUS</h3>
+                    
+                    <div class="log-section glass-panel" style="max-height: 300px; overflow-y: auto;">
+                        <h3><i class="fa-solid fa-language text-neon-blue"></i> १. मराठी व्याकरण</h3>
+                        <div class="checklist" id="syllabus-marathi">
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'BhashechaUgam')"> <span class="checkmark"></span> मराठी भाषेचा उगम</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Varnamala')"> <span class="checkmark"></span> वर्णमाला आणि व्याकरण</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Sandhi')"> <span class="checkmark"></span> संधी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Shabdsiddhi')"> <span class="checkmark"></span> शब्दसिद्धी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Naam')"> <span class="checkmark"></span> नाम, लिंग, वचन, विभक्ती</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Sarvanaam')"> <span class="checkmark"></span> सर्वनाम</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Visheshan')"> <span class="checkmark"></span> विशेषण</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Kriyaapad')"> <span class="checkmark"></span> क्रियापद</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Kaal')"> <span class="checkmark"></span> काळ</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Prayog')"> <span class="checkmark"></span> प्रयोग</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Samaas')"> <span class="checkmark"></span> समास</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Alankar')"> <span class="checkmark"></span> अलंकार</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Vakyapruthakkaran')"> <span class="checkmark"></span> वाक्य पृथक्करण</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Vakyaprachar')"> <span class="checkmark"></span> वाक्प्रचार</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Mhani')"> <span class="checkmark"></span> म्हणी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Synonyms')"> <span class="checkmark"></span> समानार्थी आणि विरुद्धार्थी शब्द</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('marathi', 'Sahitya')"> <span class="checkmark"></span> साहित्य आणि लेखक</label>
+                        </div>
+                    </div>
+                    
+                    <div class="log-section glass-panel" style="max-height: 300px; overflow-y: auto;">
+                        <h3><i class="fa-solid fa-calculator text-neon-orange"></i> २. गणित (Mathematics)</h3>
+                        <div class="checklist" id="syllabus-maths">
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'NumberSystem')"> <span class="checkmark"></span> संख्या आणि संख्यांचे प्रकार</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'LcmHcf')"> <span class="checkmark"></span> लसावी आणि मसावी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'Squares')"> <span class="checkmark"></span> वर्ग आणि वर्गमूळ, घन आणि घनमूळ</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'Fractions')"> <span class="checkmark"></span> अपूर्णांक व दशांश अपूर्णांक</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'Average')"> <span class="checkmark"></span> सरासरी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'Percentage')"> <span class="checkmark"></span> शेकडेवारी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'ProfitLoss')"> <span class="checkmark"></span> नफा-तोटा</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'Interest')"> <span class="checkmark"></span> सरळव्याज आणि चक्रवाढ व्याज</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'Ratio')"> <span class="checkmark"></span> गुणोत्तर आणि प्रमाण</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'TimeWork')"> <span class="checkmark"></span> काळ, काम, वेग</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'TimeDistance')"> <span class="checkmark"></span> रेल्वे, गाडी, वेळ, अंतर</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'Age')"> <span class="checkmark"></span> वयवारी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('maths', 'Geometry')"> <span class="checkmark"></span> भूमिती</label>
+                        </div>
+                    </div>
+                    
+                    <div class="log-section glass-panel" style="max-height: 300px; overflow-y: auto;">
+                        <h3><i class="fa-solid fa-brain text-neon-blue"></i> ३. बुद्धिमत्ता चाचणी</h3>
+                        <div class="checklist" id="syllabus-reasoning">
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'NumSeries')"> <span class="checkmark"></span> संख्या मालिका</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'AlphaSeries')"> <span class="checkmark"></span> अक्षर मालिका</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'Coding')"> <span class="checkmark"></span> सांकेतिक भाषा</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'BloodRelation')"> <span class="checkmark"></span> नातेसंबंध</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'Direction')"> <span class="checkmark"></span> दिशा ज्ञान</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'SittingArrangement')"> <span class="checkmark"></span> बैठक व्यवस्था</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'ClockCalendar')"> <span class="checkmark"></span> कालमापन (घड्याळ आणि दिनदर्शिका)</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'Syllogism')"> <span class="checkmark"></span> तर्क आणि अनुमान</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'Venn')"> <span class="checkmark"></span> वेन आकृत्या</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'Images')"> <span class="checkmark"></span> आरशातील व पाण्यातील प्रतिमा</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'FigCounting')"> <span class="checkmark"></span> आकृत्यांची मोजणी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'Ranking')"> <span class="checkmark"></span> रांगेतील क्रम ओळखणे</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'Analogy')"> <span class="checkmark"></span> समसंबंध</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('reasoning', 'OddOneOut')"> <span class="checkmark"></span> विसंगत घटक</label>
+                        </div>
+                    </div>
+                    
+                    <div class="log-section glass-panel" style="max-height: 300px; overflow-y: auto;">
+                        <h3><i class="fa-solid fa-globe text-neon-orange"></i> ४. सामान्य ज्ञान (GK)</h3>
+                        <div class="checklist" id="syllabus-gk">
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'MahGeography')"> <span class="checkmark"></span> महाराष्ट्राचा भूगोल</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'IndGeography')"> <span class="checkmark"></span> भारताचा भूगोल</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'MahHistory')"> <span class="checkmark"></span> महाराष्ट्राचा इतिहास (छत्रपती शिवाजी महाराज)</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'Reformers')"> <span class="checkmark"></span> समाजसुधारक</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'IndHistory')"> <span class="checkmark"></span> भारताचा इतिहास</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'PanchayatRaj')"> <span class="checkmark"></span> पंचायत राज</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'Polity')"> <span class="checkmark"></span> भारतीय संविधान (राज्यघटना)</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'Economics')"> <span class="checkmark"></span> अर्थशास्त्र</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'Science')"> <span class="checkmark"></span> सामान्य विज्ञान</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'Computers')"> <span class="checkmark"></span> संगणक व माहिती तंत्रज्ञान</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'CurrentAffairs')"> <span class="checkmark"></span> चालू घडामोडी</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'SportsAwards')"> <span class="checkmark"></span> खेळ आणि पुरस्कार</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleSyllabus('gk', 'PoliceInfo')"> <span class="checkmark"></span> पोलीस प्रशासन माहिती</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GROUND PRACTICE -->
+            <div id="view-ground" class="view">
+                <h2><i class="fa-solid fa-person-running"></i> DRILL & GROUND</h2>
+                
+                <div class="glass-panel mt-4 border-orange">
+                    <h3><i class="fa-solid fa-medal text-neon-orange"></i> GROUND TEST (50 MARKS)</h3>
+                    <div class="marks-grid">
+                        <div class="mark-card">
+                            <h4>1600m Run</h4>
+                            <p class="score">20 Marks</p>
+                            <span class="subtext">Target: Under 5:10 mins</span>
+                        </div>
+                        <div class="mark-card">
+                            <h4>100m Sprint</h4>
+                            <p class="score">15 Marks</p>
+                            <span class="subtext">Target: Under 11.50 secs</span>
+                        </div>
+                        <div class="mark-card">
+                            <h4>Shot Put</h4>
+                            <p class="score">15 Marks</p>
+                            <span class="subtext">Target: 8.50 meters+</span>
+                        </div>
+                    </div>
+                    <p style="font-size:0.6rem; color:var(--text-muted); text-align:center; margin-top:10px;">*Female Candidates: 800m Run (20 Marks), 100m Sprint (15 Marks), Shot Put (15 Marks)</p>
+                </div>
+
+                <div class="timer-display glass-panel cyber-border">
+                    <div class="time" id="stopwatch">00:00:00</div>
+                    <div class="timer-controls" style="gap: 10px;">
+                        <button class="cyber-btn primary" style="padding: 10px;" onclick="startTimer()"><i class="fa-solid fa-play"></i></button>
+                        <button class="cyber-btn secondary" style="padding: 10px; border-color: var(--neon-blue); color: var(--neon-blue);" onclick="lapTimer()"><i class="fa-solid fa-flag-checkered"></i> LAP</button>
+                        <button class="cyber-btn secondary" style="padding: 10px;" onclick="stopTimer()"><i class="fa-solid fa-pause"></i></button>
+                        <button class="cyber-btn secondary" style="padding: 10px;" onclick="resetTimer()"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
+                    <div class="laps-container mt-4" id="lapsContainer">
+                        <!-- Laps appear here -->
+                    </div>
+                </div>
+
+                <!-- NEW: REP COUNTER -->
+                <div class="glass-panel mt-4" style="text-align: center; border-color: var(--neon-orange);">
+                    <h3><i class="fa-solid fa-dumbbell text-neon-orange"></i> QUICK REP COUNTER</h3>
+                    <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom: 10px;">For Push-ups, Pull-ups, or Squats</p>
+                    <div id="repCountDisplay" style="font-size: 4rem; font-family: 'Orbitron', sans-serif; color: #fff; margin: 10px 0;">0</div>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <button class="cyber-btn primary" style="flex: 2; padding: 15px; font-size: 1.2rem;" onclick="addRep()"><i class="fa-solid fa-plus"></i> TAP TO COUNT</button>
+                        <button class="cyber-btn secondary" style="flex: 1;" onclick="resetReps()"><i class="fa-solid fa-rotate-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="events-grid mt-4">
+                    <div class="log-section glass-panel">
+                        <h3><i class="fa-solid fa-clipboard-check text-neon-blue"></i> Daily Ground Targets</h3>
+                        <div class="checklist" id="checklist-ground">
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('ground', '1600m Run')"> <span class="checkmark"></span> 1600m Run (Target: 5:10)</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('ground', '100m Sprint')"> <span class="checkmark"></span> 100m Sprint</label>
+                            <label class="check-item"><input type="checkbox" onchange="toggleTask('ground', 'Shot Put')"> <span class="checkmark"></span> Shot Put (8.5m)</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- OVERTHINKING KILLER (ZEN/MEDITATION) -->
+            <div id="view-meditation" class="view">
+                <div class="meditation-container" id="meditationContainer">
+                    <button class="icon-btn exit-zen-btn" id="exitZenBtn" onclick="stopZenMode()"><i class="fa-solid fa-xmark"></i></button>
+                    <h2 class="meditation-title" id="zenTitle"><i class="fa-solid fa-brain"></i> OVERTHINKING KILLER</h2>
+                    
+                    <!-- EMOTIONAL DECISION POPUP (Inline Modal) -->
+                    <div id="emotionalPopup" class="glass-panel" style="text-align: center; border: 2px solid #ff3366; box-shadow: 0 0 30px rgba(255,51,102,0.3); display: none; width: 100%; margin-bottom: 20px;">
+                        <h3 style="color: #ff3366; margin-bottom: 15px;"><i class="fa-solid fa-triangle-exclamation"></i> ARE YOU EMOTIONAL RIGHT NOW?</h3>
+                        <p style="font-size: 0.8rem; margin-bottom: 20px;">Angry, sad, or frustrated? Do not reply instantly. Do not make decisions.</p>
+                        <div style="display: flex; gap: 10px; justify-content: center;">
+                            <button class="cyber-btn danger" onclick="triggerCooldown()">YES, I AM</button>
+                            <button class="cyber-btn secondary" onclick="closeEmotionalPopup()">NO, I'M CALM</button>
+                        </div>
+                    </div>
+
+                    <!-- COOL-DOWN LOCK -->
+                    <div id="cooldownLock" class="glass-panel" style="text-align: center; display: none; border-color: var(--neon-blue); width: 100%; margin-bottom: 20px;">
+                        <h3 style="color: var(--neon-blue);"><i class="fa-solid fa-lock"></i> 5-MIN EMOTIONAL COOLDOWN</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 15px 0;">Detachment active. Breathe. Refocus on your mission.</p>
+                        <div id="cooldownTimer" style="font-size: 3rem; font-family: 'Orbitron', sans-serif; color: #fff;">05:00</div>
+                        <p style="font-size: 0.75rem; color: var(--neon-orange); margin-top: 15px; font-style: italic;">"Silence is the best reply to anger."</p>
+                    </div>
+
+                    <!-- BRAIN DUMP JOURNAL -->
+                    <div id="angerVent" class="anger-vent" style="width: 100%; max-width: 300px; margin-bottom: 20px;">
+                        <h3 style="margin-bottom: 10px;"><i class="fa-solid fa-pen-to-square text-neon-orange"></i> NIGHT MODE BRAIN DUMP</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px;">Dump all your overthinking and toxic thoughts here. Then destroy them.</p>
+                        <textarea id="angerText" class="cyber-input" rows="4" placeholder="I am overthinking about..."></textarea>
+                        <button class="cyber-btn danger mt-4" style="width: 100%; justify-content: center;" onclick="burnAnger()">
+                            <i class="fa-solid fa-fire"></i> DESTROY THOUGHTS
+                        </button>
+                    </div>
+
+                    <!-- NEW: VICTORY & GRATITUDE JOURNAL -->
+                    <div id="victoryJournal" class="glass-panel" style="width: 100%; display: none; border-color: var(--neon-green);">
+                        <h3 style="color: var(--neon-green);"><i class="fa-solid fa-trophy"></i> आजचा विजय (DAILY VICTORY)</h3>
+                        <p style="font-size: 0.8rem; color: var(--text-muted); margin: 10px 0;">आजच्या दिवसात झालेली एक चांगली गोष्ट लिहा.</p>
+                        <input type="text" id="victoryInput" class="cyber-input" placeholder="उदा. आज मी १६०० मी धावलो...">
+                        <button class="cyber-btn primary mt-4" style="width: 100%; background: var(--neon-green); color: #000;" onclick="saveVictory()">SAVE VICTORY</button>
+                    </div>
+
+                    <!-- NEW: POLICE AFFIRMATIONS (स्वयंसूचना) -->
+                    <div id="affirmationCard" class="glass-panel" style="width: 100%; margin-top: 20px; border-color: var(--neon-blue); text-align: center; background: rgba(0, 240, 255, 0.05);">
+                        <h4 style="font-size: 0.7rem; color: var(--neon-blue); letter-spacing: 2px; text-transform: uppercase;">POLICE AFFIRMATION</h4>
+                        <p id="affirmationText" style="font-size: 1.1rem; font-weight: 700; margin: 15px 0; color: #fff; line-height: 1.5;">"मी वर्दी मिळवण्यासाठीच जन्माला आलो आहे."</p>
+                        <button class="action-btn" onclick="nextAffirmation()"><i class="fa-solid fa-rotate"></i> NEXT</button>
+                    </div>
+
+                    <!-- NEW: THOUGHT TRANSFORMER (Cognitive Reframing) -->
+                    <div id="thoughtTransformer" class="glass-panel mt-4 border-orange" style="width: 100%;">
+                        <h3 style="font-size: 0.9rem; color: var(--neon-orange);"><i class="fa-solid fa-wand-magic-sparkles"></i> THOUGHT TRANSFORMER</h3>
+                        <div id="transformStep1">
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 10px 0;">Write one negative thought (e.g. "I will fail").</p>
+                            <input type="text" id="negativeThought" class="cyber-input" placeholder="Enter negative thought...">
+                            <button class="cyber-btn warning mt-4" style="width: 100%;" onclick="nextTransformStep(2)">REFRAME IT</button>
+                        </div>
+                        <div id="transformStep2" style="display: none;">
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin: 10px 0;">What is the ACTUAL evidence for this? (Be logical)</p>
+                            <textarea id="thoughtEvidence" class="cyber-input" rows="2" placeholder="e.g. I am studying 6 hours daily..."></textarea>
+                            <button class="cyber-btn primary mt-4" style="width: 100%;" onclick="nextTransformStep(3)">NEXT</button>
+                        </div>
+                        <div id="transformStep3" style="display: none;">
+                            <p style="font-size: 0.75rem; color: var(--neon-green); margin: 10px 0;">NEW POWER THOUGHT:</p>
+                            <h4 id="powerThoughtDisplay" style="font-style: italic; line-height: 1.4;">"I am putting in the work, and my results will follow."</h4>
+                            <button class="cyber-btn success mt-4" style="width: 100%;" onclick="finishTransformation()">TRANSFORMED</button>
+                        </div>
+                    </div>
+
+                    <!-- NEW: ONE SMALL STEP (Problem Solver) -->
+                    <div id="problemSolver" class="glass-panel mt-4 border-blue" style="width: 100%;">
+                        <h3 style="font-size: 0.9rem;"><i class="fa-solid fa-list-check"></i> OVERWHELM KILLER</h3>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin: 10px 0;">What is overwhelming you? (e.g. "Maths Syllabus")</p>
+                        <input type="text" id="overwhelmedBy" class="cyber-input" placeholder="What is the problem?">
+                        <div id="smallStepAdvice" style="display: none; margin-top: 15px; padding: 10px; background: rgba(0,240,255,0.05); border-radius: 5px;">
+                            <p style="font-size: 0.65rem; color: var(--neon-blue); text-transform: uppercase;">One Small Step For You:</p>
+                            <h4 id="oneSmallAction" style="font-size: 0.9rem; margin-top: 5px;">Solve just 5 questions now.</h4>
+                        </div>
+                        <button class="cyber-btn primary mt-4" style="width: 100%;" onclick="solveProblem()">GET ACTION STEP</button>
+                    </div>
+
+                    <div id="zenOptions" style="display: none; width: 100%;">
+                        <p class="meditation-subtitle" id="zenSubtitle">Thoughts destroyed. Now choose your peace.</p>
+                        <div class="zen-controls" id="zenControls">
+                            <button class="cyber-btn primary" style="width: 100%; justify-content: center; padding: 15px;" onclick="startZenMode('478')">
+                                <i class="fa-solid fa-lungs"></i> 4-7-8 RELAXATION
+                            </button>
+                            <button class="cyber-btn secondary mt-4" style="width: 100%; justify-content: center; padding: 15px;" onclick="startZenMode('timer')">
+                                <i class="fa-solid fa-clock"></i> 5 MIN DEEP FOCUS
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- NEW: FOCUS SOUNDS (Binaural Beats / Rain) -->
+                    <div class="focus-sounds-container glass-panel mt-4" style="width: 100%;">
+                        <h3 style="font-size: 0.9rem;"><i class="fa-solid fa-headphones"></i> FOCUS SOUNDS</h3>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button class="sound-btn" id="btn-binaural" onclick="toggleSound('binaural')"><i class="fa-solid fa-brain"></i> Focus</button>
+                            <button class="sound-btn" id="btn-rain" onclick="toggleSound('rain')"><i class="fa-solid fa-cloud-showers-heavy"></i> Rain</button>
+                            <button class="sound-btn" id="btn-white" onclick="toggleSound('white')"><i class="fa-solid fa-wind"></i> Calm</button>
+                        </div>
+                    </div>
+
+                    <!-- NEW: QUICK PHYSICAL RELIEF -->
+                    <div class="physical-relief glass-panel mt-4" style="width: 100%;">
+                        <h3 style="font-size: 0.9rem;"><i class="fa-solid fa-person-praying"></i> QUICK RELIEF (2 MIN)</h3>
+                        <div class="relief-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                            <div class="relief-item"><i class="fa-solid fa-arrows-to-circle"></i> Neck Rolls</div>
+                            <div class="relief-item"><i class="fa-solid fa-up-down"></i> Shoulder Shrugs</div>
+                            <div class="relief-item"><i class="fa-solid fa-hand-fist"></i> Wrist Circles</div>
+                            <div class="relief-item"><i class="fa-solid fa-lungs"></i> Deep Belly Breath</div>
+                        </div>
+                    </div>
+
+                    <!-- EMERGENCY: RAGE BURNER CHALLENGE -->
+                    <div id="rageBurner" class="glass-panel mt-4 intensity-warning" style="width: 100%; border-color: #ff0000; background: rgba(255,0,0,0.1); display: none;">
+                        <h3 style="color: #ff0000;"><i class="fa-solid fa-fire-flame-curved"></i> RAGE BURNER ACTIVE!</h3>
+                        <p style="font-size: 0.8rem; margin: 10px 0;">Adrenaline is high. You cannot THINK your way out of this. You must BURN it. Do 20 Burpees or Pushups NOW.</p>
+                        <div id="rageRepCount" style="font-size: 3rem; font-family: 'Orbitron', sans-serif; color: #fff; margin: 15px 0;">20</div>
+                        <button class="cyber-btn danger" style="width: 100%;" onclick="burnRageRep()">I DID 1 REP</button>
+                    </div>
+
+                    <!-- HARD TRUTH REALITY CHECK -->
+                    <div id="realityCheckCard" class="glass-panel mt-4" style="width: 100%; display: none; border-color: #ffaa00; background: rgba(255,170,0,0.05);">
+                        <h3 style="color: #ffaa00;"><i class="fa-solid fa-skull-crossbones"></i> REALITY CHECK</h3>
+                        <p id="realityText" style="font-size: 0.95rem; font-weight: 600; line-height: 1.5; font-style: italic; margin-top: 10px;">"If you keep overthinking and wasting time today, that uniform will stay on someone else's body. Your parents are getting older. Wake up."</p>
+                        <button class="action-btn" onclick="nextRealityCheck()" style="color: #ffaa00; border-color: #ffaa00;">SHOW MORE TRUTH</button>
+                    </div>
+
+                    <!-- COLD WATER SHOCK -->
+                    <div id="coldShock" class="glass-panel mt-4" style="width: 100%; border-color: #0088ff; background: rgba(0,136,255,0.05); display: none;">
+                        <h3 style="color: #0088ff;"><i class="fa-solid fa-snowflake"></i> SYSTEM RESET (COLD SHOCK)</h3>
+                        <p style="font-size: 0.8rem; margin: 10px 0;">Your brain is looping. Go to the bathroom and splash ICE COLD water on your face for 30 seconds. This activates the 'Dive Reflex' and kills overthinking instantly.</p>
+                        <button class="cyber-btn primary" style="width: 100%; background: #0088ff;" onclick="closeColdShock()">I AM BACK / RESET DONE</button>
+                    </div>
+
+                    <!-- VOICE MOTIVATION -->
+                    <div style="display: flex; gap: 10px; width: 100%;" class="mt-4">
+                        <button class="cyber-btn danger" style="flex: 1;" onclick="triggerEmergencyMode('rage')">RAGE BURN</button>
+                        <button class="cyber-btn warning" style="flex: 1; border-color: #ffaa00; color: #ffaa00;" onclick="triggerEmergencyMode('reality')">REALITY</button>
+                        <button class="cyber-btn primary" style="flex: 1; background: #0088ff; border: none;" onclick="triggerEmergencyMode('cold')">COLD RESET</button>
+                    </div>
+
+                    <button class="cyber-btn primary mt-4" style="width: 100%; background: linear-gradient(45deg, #00f0ff, #7000ff); border: none;" onclick="speakMotivation()">
+                        <i class="fa-solid fa-volume-high"></i> HEAR MOTIVATION (स्वयंसूचना ऐका)
+                    </button>
+
+                    <div class="breathing-circle-wrapper" id="zenCircleWrapper" style="display: none; margin-top: 40px;">
+                        <div class="breathing-circle" id="zenCircle"></div>
+                        <div class="breathing-text" id="breatheText">Ready</div>
+                        <div class="zen-timer" id="zenTimerDisplay">05:00</div>
+                    </div>
+                    
+                    <div class="waves-animation">
+                        <div class="wave wave1"></div>
+                        <div class="wave wave2"></div>
+                        <div class="wave wave3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ANALYTICS -->
+            <div id="view-analytics" class="view">
+                <h2><i class="fa-solid fa-chart-line"></i> ANALYTICS</h2>
+                
+                <div class="glass-panel cyber-border">
+                    <h3 style="font-size: 0.8rem; margin-bottom: 15px;"><i class="fa-solid fa-calendar-days"></i> 7-DAY CONSISTENCY</h3>
+                    <div class="chart-bars">
+                        <div class="bar" style="height: 40%"></div>
+                        <div class="bar" style="height: 60%"></div>
+                        <div class="bar" style="height: 50%"></div>
+                        <div class="bar" style="height: 80%"></div>
+                        <div class="bar" style="height: 90%"></div>
+                        <div class="bar" style="height: 70%"></div>
+                        <div class="bar" id="todayAnalyticsBar" style="height: 0%"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-around; margin-top: 10px; font-size: 0.7rem; color: var(--text-muted);">
+                        <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>TODAY</span>
+                    </div>
+                    <p class="text-center mt-4 text-neon-blue" style="font-family: 'Orbitron', sans-serif; font-weight: 700;">Overall Focus: <span id="consistencyScore">0</span>%</p>
+                </div>
+
+                <!-- NEW: MOCK TEST PERFORMANCE CHART -->
+                <div class="glass-panel mt-4 border-orange">
+                    <h3><i class="fa-solid fa-chart-area"></i> MOCK TEST TREND</h3>
+                    <div class="trend-chart-container">
+                        <div id="mockTrendChart" class="trend-chart">
+                            <!-- SVG Trendline will be injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: MOCK TEST SCORES -->
+                <div class="mock-test-container glass-panel mt-4">
+                    <h3><i class="fa-solid fa-file-pen text-neon-orange"></i> MOCK TEST SCORES</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 10px;">Track your out of 100 written scores</p>
+                    <div class="add-score">
+                        <input type="number" id="mockScoreInput" class="cyber-input" placeholder="Score (0-100)">
+                        <button class="cyber-btn primary" onclick="addMockScore()"><i class="fa-solid fa-plus"></i></button>
+                    </div>
+                    <div class="score-history" id="mockScoreHistory">
+                        <!-- Populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <nav class="bottom-nav">
+            <a href="#" class="nav-item active" onclick="switchView('dashboard', this)">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>HQ</span>
+            </a>
+            <a href="#" class="nav-item" onclick="switchView('bonds', this)">
+                <i class="fa-solid fa-heart-pulse"></i>
+                <span>Bonds</span>
+            </a>
+            <a href="#" class="nav-item" onclick="switchView('study', this)">
+                <i class="fa-solid fa-lock"></i>
+                <span>Career Lock</span>
+            </a>
+            <a href="#" class="nav-item" onclick="switchView('ground', this)">
+                <i class="fa-solid fa-stopwatch"></i>
+                <span>Drill</span>
+            </a>
+            <a href="#" class="nav-item" onclick="switchView('log', this)">
+                <i class="fa-solid fa-list-check"></i>
+                <span>Log</span>
+            </a>
+        </nav>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
